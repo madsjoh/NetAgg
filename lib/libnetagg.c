@@ -33,36 +33,17 @@ int netagg_close(int fd) {
 }
 
 /* Append rule sender side. This will diverge a subset of the TCP packets according to the binary send vector */
-int netagg_append_sender(int hw_fd, __be64 vector, __be32 pri_daddr, __be32 sec_daddr, __be16 pri_port, __be16 sec_port)
+int netagg_append_sender(int hw_fd, struct rule *rule)
 {
 	int ret = 0;
-	rule_t ioctl_args;
-	memset(&ioctl_args, 0, sizeof(ioctl_args));
-	
-	ioctl_args.binary_vector = vector;
-	ioctl_args.pri_daddr = pri_daddr;
-	ioctl_args.sec_daddr = sec_daddr;
-	ioctl_args.pri_port = pri_port;
-	ioctl_args.sec_port = sec_port;
-
-	ret = ioctl(hw_fd, NETAGG_IOCTL_APPEND_SENDER, &ioctl_args);
-
+	ret = ioctl(hw_fd, NETAGG_IOCTL_APPEND_SENDER, rule);
 	return ret;
 }
 /* Append rule receiver side. This will mearge all TCP packets matching sec_daddr and sec_port to pri_daddr and pri_port */
-int netagg_append_receiver(int hw_fd, __be32 pri_daddr, __be32 sec_daddr, __be16 pri_port, __be16 sec_port)
+int netagg_append_receiver(int hw_fd, struct rule *rule)
 {
 	int ret = 0;
-	rule_t ioctl_args;
-	memset(&ioctl_args, 0, sizeof(ioctl_args));
-	
-	ioctl_args.pri_daddr = pri_daddr;
-	ioctl_args.sec_daddr = sec_daddr;
-	ioctl_args.pri_port = pri_port;
-	ioctl_args.sec_port = sec_port;
-
-	ret = ioctl(hw_fd, NETAGG_IOCTL_APPEND_RECEIVER, &ioctl_args);
-
+	ret = ioctl(hw_fd, NETAGG_IOCTL_APPEND_RECEIVER, rule);
 	return ret;
 }
 /* Flush sender side rules */

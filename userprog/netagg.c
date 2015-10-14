@@ -5,18 +5,15 @@
 #include <netagg.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include <linux/types.h>
 #include <getopt.h>
 #include <string.h>
-#include <unistd.h>
-#include "../include/netagg.h"
 
 struct netagg_data {
 	int type;
 	int command;
 	__be32 wPri;
 	__be32 wSec;
-		
+	struct rule rule;
 };
 
 
@@ -49,18 +46,21 @@ static void printUsage(){
 	printf("\t -S <daddr:dport>, set secondary destination address and port\n");
 	printf("\t -R <weightPrimary:weightSecondary>, set weight ratio between primary and secondary path\n");
 }
-static void process_opt(struct netagg_data *data){
+static void process_opt(struct netagg_data *data, int argc, char *argv[]){
 	int options;
 	while((options = getopt(argc,argv,"A:FP:S:R:")) != -1){
 		switch(options){
 			case 'A':
-				if(strcmp(optarg,"sender"))type = 1;
-				else if(strcmp(optarg, "receiver"))type = 2;
+				if(strcmp(optarg,"sender"))data->type = 1;
+				else if(strcmp(optarg, "receiver"))data->type = 2;
 				else {printf("Invalid command in append rule: -A, use -? for more information\n");exit(EXIT_FAILURE);}
-				command = 0;
+				data->command = 1;
 				break;
 			case 'F':
-				command = 1;
+				if(strcmp(optarg,"sender"))data->type = 1;
+				else if(strcmp(optarg, "receiver"))data->type = 2;
+				else {printf("Invalid command in flush rule: -F, use -? for more information\n");exit(EXIT_FAILURE);}
+				data->command = 2;
 				break;
 			case 'P':
 				data->rule.pri_daddr = ntohl(inet_addr(strtok(optarg,":")));
@@ -90,15 +90,15 @@ int isValid(struct rule *rule){
 		return 0;
 }
 void append_sender(struct netagg_data *data){
-	data->rule.vector = generateSendVector(data->wPri,data->wSec);
-	int fd = netagg_open(fd);
+	data->rule.binary_vector = generateSendVector(data->wPri,data->wSec);
+	int fd = netagg_open();
 	netagg_append_sender(fd,&data->rule);
 	netagg_close(fd);
 }
 void append_receiver(struct netagg_data *data){
-	int fd = netagg_open(fd);
-	netagg_append_receiver(fd,data->rule);
-	netagg_close();
+	int fd = netagg_open();
+	netagg_append_receiver(fd,&data->rule);
+	netagg_close(fd);
 }
 void flush_sender(){
 	int fd = netagg_open();
@@ -143,37 +143,15 @@ static void process_receiver(struct netagg_data *data){
 }
 int main(int argc, char *argv[]){
 	struct netagg_data data;
-	process_opt(&data);
-
-	switch(type){
+	memset((void *)&data,0,sizeof(struct netagg_data));
+	process_opt(&data, argc, argv);
+	switch(data.type){
 		case 1:
 			process_sender(&data);
 			break;
 		case 2:
 			process_receiver(&data);
-		default:
-			printUsage();
-		exit(EXIT_FAILURE);
+			break;
 	}
-		switch(command){
-			case 0:
-				if(pri_addr != 0 && sec_addr != 0 && pri_port != 0 && sec_port != 0){
-					vector = generateSendVector(wPri,wSec);
-					fd = my_netfilter_open();
-					my_netfilter_append(fd,vector,pri_addr,sec_addr,pri_port, sec_port);
-					my_netfilter_close(fd);
-				}
-				break;
-			case 1:
-				fd = my_netfilter_open();
-				my_netfilter_flush(fd);
-				my_netfilter_close(fd);
-				break;
-			case 2:
-				break;
-			default:
-				break;
-		}
-	}
-return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

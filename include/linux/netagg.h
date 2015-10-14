@@ -28,8 +28,8 @@ typedef struct rule
 {
     __be32 pri_daddr;
     __be32 sec_daddr;
-    __be16 pri_port;
-    __be16 sec_port;
+    __be16 pri_dport;
+    __be16 sec_dport;
     __be64 binary_vector;
 }rule_t;
 
