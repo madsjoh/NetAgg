@@ -85,12 +85,12 @@ static void output_filter(struct sk_buff *skb)
 		struct tcphdr *tcp 	= (struct tcphdr *) (skb->data + (ip->ihl * 4));
 		/* Go through rule list*/
 		while(tmp != NULL){
-			if(tmp->rule.pri_daddr == ntohl(ip->daddr) && tmp->rule.pri_port == ntohs(tcp->dest)){
+			if(tmp->rule.pri_daddr == ntohl(ip->daddr) && tmp->rule.pri_dport == ntohs(tcp->dest)){
 				/* match */
 				if(checkBit(tmp->index, tmp->rule.binary_vector)){
 					/* diverge packet */
 					ip->daddr = htonl(tmp->rule.sec_daddr);
-					tcp->dest = htons(tmp->rule.sec_port);
+					tcp->dest = htons(tmp->rule.sec_dport);
 					tcplen = (skb->len - (ip->ihl << 2));
 					tcp->check = 0;
 					tcp->check = ~tcp_v4_check(tcplen, ip->saddr,ip->daddr, 0);
@@ -117,10 +117,10 @@ static void prerouting_filter(struct sk_buff *skb)
 		struct tcphdr *tcp 	= (struct tcphdr *) (skb->data + (ip->ihl * 4));
 		/* Go through rule list*/
 		while(tmp != NULL){
-			if(tmp->rule.sec_daddr == ntohl(ip->daddr) && tmp->rule.sec_port == ntohs(tcp->dest)){
+			if(tmp->rule.sec_daddr == ntohl(ip->daddr) && tmp->rule.sec_dport == ntohs(tcp->dest)){
 				/* match, merge packet */
 				ip->daddr = htonl(tmp->rule.pri_daddr);
-				tcp->dest = htons(tmp->rule.pri_port);
+				tcp->dest = htons(tmp->rule.pri_dport);
 				tcplen = (skb->len - (ip->ihl << 2));
 				tcp->check = 0;
 				tcp->check = ~tcp_v4_check(tcplen, ip->saddr,ip->daddr, 0);
