@@ -9,7 +9,7 @@ prog:
 
 
 run:
-	./build/userprog/netagg -A -p 10.0.0.11:3333 -s 10.0.0.17:3333 -r 0:1
+	./build/userprog/netagg -A sender -P 10.0.0.11:3333 -S 10.0.0.17:3333 -R 1:1
 
 clean:
 	-rm -rfv build/ 

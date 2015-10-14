@@ -7,7 +7,8 @@
  * ==========================================
  */
 #include <linux/types.h>
-#define NETAGG_MODULE_NAME "NetAgg"
+#define NETAGG_MODULE_NAME "netagg"
+#define DEVICE_NAME "netagg"
 #ifdef __KERNEL__
 #ifdef CONFIG_KUSP_NETAGG_DSKI
 #include <linux/kusp/dski.h>

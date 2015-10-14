@@ -12,6 +12,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/version.h>
+#include <linux/spinlock.h>
 #include <net/tcp.h>
 #include <net/ip.h>
 #include "../include/linux/netagg.h"
@@ -19,10 +20,14 @@
 /* Rule lists */
 struct rule_list *sender_list;
 struct rule_list *receiver_list;
+/* Spin locks*/
+spinlock_t sender_lock;
+spinlock_t receiver_lock;
 /* Netfiler hooks */
 static struct nf_hook_ops hook_output, hook_prerouting;
 /* Dev entry*/
-struct proc_dir_entry *netagg_proc_entry;
+int major;
+//struct proc_dir_entry *netagg_proc_entry;
 
 /*
  * ==================================================
@@ -40,6 +45,7 @@ static void netagg_append_sender(struct rule *rule){
 		while(i->next != NULL) i = i->next;
 		i->next = tmp;
 	}
+	printk("NetAgg - netagg_append_sender\n");
 }
 static void netagg_append_receiver(struct rule *rule){
 	struct rule_list *tmp = kzalloc(sizeof(struct rule_list),GFP_KERNEL);
@@ -52,6 +58,7 @@ static void netagg_append_receiver(struct rule *rule){
 		while(i->next != NULL) i = i->next;
 		i->next = tmp;
 	}
+	printk("NetAgg - netagg_append_receiver\n");
 }
 static void free_rule_list(struct rule_list *n){
 	if(n != NULL)
@@ -62,9 +69,11 @@ static void free_rule_list(struct rule_list *n){
 }
 static void netagg_flush_sender(void){
 	free_rule_list(sender_list);
+	printk("NetAgg - netagg_flush_sender\n");
 }
 static void netagg_flush_receiver(void){
 	free_rule_list(receiver_list);
+	printk("NetAgg - netagg_flush_receiver\n");
 }
 /* Checks bit at index in binary vector*/
 int checkBit(int index, __be64 vector){
@@ -190,6 +199,7 @@ static long netagg_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	int ret = 0;
 	int i = 0;
 	struct rule rule;
+	printk("NetAgg - ioctl\n");
 	switch (ioctl_num) {
 	case NETAGG_IOCTL_APPEND_SENDER :
 		i = copy_from_user((void *) &rule, (void *) ioctl_param, _IOC_SIZE(ioctl_num));
@@ -220,7 +230,7 @@ netagg_dev_fops = {
 static struct miscdevice
 netagg_misc = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name  = NETAGG_MODULE_NAME,
+	.name  = DEVICE_NAME,
 	.fops  = &netagg_dev_fops,
 };
 
@@ -236,9 +246,12 @@ static __init int netagg_init(void)
 	if(ret < 0){
 		goto out;
 	}
-	/* init rule lists*/
+	/* init rule lists */
 	sender_list = NULL;
 	receiver_list = NULL;
+	/* init spin locks */
+	spin_lock_init(&sender_lock);
+	spin_lock_init(&receiver_lock);
 	/* 
 	 *=============================
 	 *   SETUP NETFILTER HOOKS
