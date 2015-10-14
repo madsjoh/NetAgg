@@ -8,7 +8,7 @@ You must first change to the kernel module directory: `cd NetAgg/kmod`
 
 * To compile the kernel module run: `make`
 * To install the kernel module run: `make install`
-* To uninstall the kernel module run `make uninstall`
+* To uninstall the kernel module run: `make uninstall`
 
 Tool
 ----
