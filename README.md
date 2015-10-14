@@ -2,8 +2,14 @@ NetAgg
 ======
 This is a Linux module used for aggregating IP packets belonging to a TCP connection over two network paths.
 
-Usage
------
-1. To compile and install module: `cd kmod; make; make install; cd ..;`
-2. To compile NetAgg tool that manipulates rule chains in the kernel module, run: `make` in the project root folder
-3. To load new rules into the kernel module run: `./build/userprog/netagg <arguments>`
+Module
+------
+1. Change directory to the project root folder: `cd NetAgg`
+2. Change directory to kernel module directory: `cd kmod`
+
+* To compile the kernel module run: `make`
+* To install the kernel module run: `make install`
+* To uninstall the kernel module run `make uninstall`
+
+----
+Tool
