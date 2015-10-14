@@ -4,12 +4,12 @@ This is a Linux module used for aggregating IP packets belonging to a TCP connec
 
 Module
 ------
-1. Change directory to the project root folder: `cd NetAgg`
-2. Change directory to kernel module directory: `cd kmod`
+You must first change to the kernel module directory: `cd NetAgg/kmod`
 
 * To compile the kernel module run: `make`
 * To install the kernel module run: `make install`
 * To uninstall the kernel module run `make uninstall`
 
-----
 Tool
+----
+You must first change to the project root directory: `cd NetAgg`
