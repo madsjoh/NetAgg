@@ -4,21 +4,16 @@ This is a Linux module used for aggregating IP packets belonging to a TCP connec
 
 Module
 ------
-You must first change to the kernel module directory: `cd NetAgg/kmod`
-
-* To compile the kernel module run: `make`
-* To install the kernel module run: `make install`
-* To uninstall the kernel module run: `make uninstall`
+* To compile the kernel module run: `:~/NetAgg/kmod$ make`
+* To install the kernel module run: `:~/NetAgg/kmod$ make install`
+* To uninstall the kernel module run: `:~/NetAgg/kmod$ make uninstall`
 
 Tool
 ----
-You must first change to the project root directory: `cd NetAgg`
+* To compile the tool run: `:~/NetAgg$ make`
+* To run the NetAgg tool: `:~/NetAgg/build/userprog$ ./netagg`
 
-* To compile the tool run: `make`
-* To use the tool run: `./build/userprog/netagg`
-
-The NetAgg tool agruments
-
+NetAgg tool arguments:
 * `-A <sender|receiver>` Append new rule to rule chain
 * `-F <sender|receiver>` Flush rule chain
 * `-P <addr:port>` Primary destination address and port number
