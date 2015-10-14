@@ -1,6 +1,5 @@
 MODULENAME=netagg
 USER=$(shell whoami)
-
 obj-m += $(MODULENAME).o
 
 module:
