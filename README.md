@@ -23,7 +23,7 @@ NetAgg tool arguments
 
 Example
 
-If we have a multihomed receiver which is addressed with 10.0.0.11 and 10.0.0.12. The bandwidth to these interfaces could be 7500 Kbit/s and 2500 Kbit/s. To set this up we do as follows:
+If we have a multihomed receiver which is addressed with 10.0.0.11 and 10.0.0.12, and the bandwidth to these interfaces is 7500 Kbit/s and 2500 Kbit/s. We can set this up as follows:
 
 Sender side
 
