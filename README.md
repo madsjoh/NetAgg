@@ -33,7 +33,30 @@ Receiver side
 
 * `:~/NetAgg/build/userprog$ ./netagg -A receiver -P 10.0.0.11:1234 -S 10.0.0.12:1234`
 
-Configure multihomed receiver
------------------------------
+Configure hosts
+---------------
+To enable our receiver to comunicate over multiple interfaces we need to set up a routing table for each interface. We also need to configure ARP and the reverse path filter. We also need to enable forwarding.
 
+ARP
+* `sudo sysctl -w net.ipv4.conf.all.arp_filter=1`
+* `sudo sysctl -w net.ipv4.conf.<primary interface>.arp_filter=1`
+* `sudo sysctl -w net.ipv4.conf.<secondary interface>.arp_filter=1`
+ 
+RP filter
+* `sudo sysctl -w net.ipv4.conf.all.rp_filter=2`
+* `sudo sysctl -w net.ipv4.conf.<primary interface>.rp_filter=2`
+* `sudo sysctl -w net.ipv4.conf.<secondary interface>.rp_filter=2`
 
+IP forwarding
+* `sudo sysctl -w net.ipv4.ip_forward=1`
+
+Routing tables
+* `sudo ip route add <primary net addr> dev <primary interface> src <primary IP addr> table 1`
+* `sudo ip route add <secondary net addr> dev <secondary interface> src <secondary IP addr> table 2`
+* `sudo ip route add default via <primary gateway> dev <primary interface> table 1`
+* `sudo ip route add default via <secondary gateway> dev <secondary interface> table 2`
+* `sudo ip rule add from <primary IP addr> table 1`
+* `sudo ip rule add from <secondary IP addr> table 2`
+
+To enable our sender to forward packets we need to enable forwarding.
+* `sudo sysctl -w net.ipv4.ip_forward=1`
