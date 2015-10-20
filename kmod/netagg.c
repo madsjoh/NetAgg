@@ -157,32 +157,34 @@ static void prerouting_filter(struct sk_buff *skb)
 	spin_unlock(&receiver_lock);
 }
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
-static unsigned int hook_func(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
+static unsigned int hook_func_output(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
 {
-	switch(hooknum){
-	case NF_INET_LOCAL_OUT :
-		output_filter(skb);
-		break;
-	case NF_INET_PRE_ROUTING :
-		prerouting_filter(skb);
-		break;
-	}
+	output_filter(skb);
 	return NF_ACCEPT;
 }
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0)
-static unsigned int hook_func(const struct nf_hook_ops *ops, struct sk_buff *skb,
+static unsigned int hook_func_output(const struct nf_hook_ops *ops, struct sk_buff *skb,
 			      const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
 {
-	switch(ops->hooknum){
-	case NF_INET_LOCAL_OUT :
-		output_filter(skb);
-		break;
-	case NF_INET_PRE_ROUTING :
-		prerouting_filter(skb);
-		break;
-	}
+	output_filter(skb);
+	return NF_ACCEPT;
+}
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
+static unsigned int hook_func_prerouting(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
+{
+	prerouting_filter(skb);
+	return NF_ACCEPT;
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0)
+static unsigned int hook_func_prerouting(const struct nf_hook_ops *ops, struct sk_buff *skb,
+			      const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
+{
+	prerouting_filter(skb);
 	return NF_ACCEPT;
 }
 #endif
@@ -263,14 +265,14 @@ static __init int netagg_init(void)
 	 */
 
 	/* OUTPUT HOOK */
-	hook_output.hook = hook_func;
+	hook_output.hook = hook_func_output;
 	hook_output.hooknum = NF_INET_LOCAL_OUT;
 	hook_output.pf = PF_INET;
 	hook_output.priority = NF_IP_PRI_FIRST;
 	nf_register_hook(&hook_output);
 
 	/* PREROUTING HOOK */
-	hook_prerouting.hook = hook_func;
+	hook_prerouting.hook = hook_func_prerouting;
 	hook_prerouting.hooknum = NF_INET_PRE_ROUTING;
 	hook_prerouting.pf = PF_INET;
 	hook_prerouting.priority = NF_IP_PRI_FIRST;
