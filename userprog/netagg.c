@@ -48,17 +48,17 @@ static void printUsage(){
 }
 static void process_opt(struct netagg_data *data, int argc, char *argv[]){
 	int options;
-	while((options = getopt(argc,argv,"A:FP:S:R:")) != -1){
+	while((options = getopt(argc,argv,"A:F:P:S:R:")) != -1){
 		switch(options){
 			case 'A':
-				if(strcmp(optarg,"sender"))data->type = 1;
-				else if(strcmp(optarg, "receiver"))data->type = 2;
+				if(strcmp(optarg,"sender") == 0)data->type = 1;
+				else if(strcmp(optarg, "receiver") == 0)data->type = 2;
 				else {printf("Invalid command in append rule: -A, use -? for more information\n");exit(EXIT_FAILURE);}
 				data->command = 1;
 				break;
 			case 'F':
-				if(strcmp(optarg,"sender"))data->type = 1;
-				else if(strcmp(optarg, "receiver"))data->type = 2;
+				if(strcmp(optarg,"sender") == 0)data->type = 1;
+				else if(strcmp(optarg, "receiver") == 0)data->type = 2;
 				else {printf("Invalid command in flush rule: -F, use -? for more information\n");exit(EXIT_FAILURE);}
 				data->command = 2;
 				break;
@@ -111,14 +111,15 @@ void flush_receiver(){
 	netagg_close(fd);
 }
 static void process_sender(struct netagg_data *data){
+	printf("process_sender\n");
 	switch(data->command){
-		case 0:
+		case 1:
 			if(isValid(&data->rule))
 				append_sender(data);
 			else
 				printUsage();
 			break;
-		case 1:
+		case 2:
 			flush_sender();
 			break;
 		default:
