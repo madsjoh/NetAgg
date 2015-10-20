@@ -37,6 +37,7 @@ int major;
 static void netagg_append_sender(struct rule *rule){
 	struct rule_list *tmp = kzalloc(sizeof(struct rule_list),GFP_KERNEL);
 	memcpy((void *)&tmp->rule, (void *)rule,sizeof(struct rule));
+	spin_lock(&sender_lock);
 	if(sender_list == NULL){
 		sender_list = tmp;
 	}
@@ -45,11 +46,13 @@ static void netagg_append_sender(struct rule *rule){
 		while(i->next != NULL) i = i->next;
 		i->next = tmp;
 	}
+	spin_unlock(&sender_lock);
 	printk("NetAgg - netagg_append_sender\n");
 }
 static void netagg_append_receiver(struct rule *rule){
 	struct rule_list *tmp = kzalloc(sizeof(struct rule_list),GFP_KERNEL);
 	memcpy((void *)&tmp->rule, (void *)rule,sizeof(struct rule));
+	spin_lock(&receiver_lock);
 	if(receiver_list == NULL){
 		receiver_list = tmp;
 	}
@@ -58,6 +61,7 @@ static void netagg_append_receiver(struct rule *rule){
 		while(i->next != NULL) i = i->next;
 		i->next = tmp;
 	}
+	spin_unlock(&receiver_lock);
 	printk("NetAgg - netagg_append_receiver\n");
 }
 static void free_rule_list(struct rule_list *n){
@@ -68,11 +72,15 @@ static void free_rule_list(struct rule_list *n){
 	}
 }
 static void netagg_flush_sender(void){
+	spin_lock(&sender_lock);
 	free_rule_list(sender_list);
+	spin_unlock(&sender_lock);
 	printk("NetAgg - netagg_flush_sender\n");
 }
 static void netagg_flush_receiver(void){
+	spin_lock(&receiver_lock);
 	free_rule_list(receiver_list);
+	spin_unlock(&receiver_lock);
 	printk("NetAgg - netagg_flush_receiver\n");
 }
 /* Checks bit at index in binary vector*/
@@ -88,6 +96,7 @@ static void output_filter(struct sk_buff *skb)
 {
 	struct rule_list *tmp = sender_list;
 	int tcplen = 0;
+	spin_lock(&sender_lock);
 	if(skb != NULL){
 		/* retrive IP and TCP header from SKB*/
 		struct iphdr *ip 	= (struct iphdr *)skb_network_header(skb);
@@ -114,12 +123,14 @@ static void output_filter(struct sk_buff *skb)
 			tmp = tmp->next;
 		}
 	}
+	spin_unlock(&sender_lock);
 }
 /* Filter packets in prerouting hook, this is incoming packets before they are routed at the receiver side.*/
 static void prerouting_filter(struct sk_buff *skb)
 {
 	struct rule_list *tmp = receiver_list;
 	int tcplen = 0;
+	spin_lock(&receiver_lock);
 	if(skb != NULL){
 		/* retrive IP and TCP header from SKB*/
 		struct iphdr *ip 	= (struct iphdr *)skb_network_header(skb);
@@ -143,21 +154,18 @@ static void prerouting_filter(struct sk_buff *skb)
 			tmp = tmp->next;
 		}
 	}
+	spin_unlock(&receiver_lock);
 }
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
 static unsigned int hook_func(unsigned int hooknum, struct sk_buff *skb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *))
 {
 	switch(hooknum){
 	case NF_INET_LOCAL_OUT :
-	{
 		output_filter(skb);
 		break;
-	}
 	case NF_INET_PRE_ROUTING :
-	{
 		prerouting_filter(skb);
 		break;
-	}	
 	}
 	return NF_ACCEPT;
 }
@@ -169,15 +177,11 @@ static unsigned int hook_func(const struct nf_hook_ops *ops, struct sk_buff *skb
 {
 	switch(ops->hooknum){
 	case NF_INET_LOCAL_OUT :
-	{
 		output_filter(skb);
 		break;
-	}
 	case NF_INET_PRE_ROUTING :
-	{
 		prerouting_filter(skb);
 		break;
-	}	
 	}
 	return NF_ACCEPT;
 }
