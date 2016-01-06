@@ -7,4 +7,3 @@ SET(CMAKE_C_FLAGS "-Wall")
 
 ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(userprog)
-
