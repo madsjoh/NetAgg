@@ -111,7 +111,6 @@ void flush_receiver(){
 	netagg_close(fd);
 }
 static void process_sender(struct netagg_data *data){
-	printf("process_sender\n");
 	switch(data->command){
 		case 1:
 			if(isValid(&data->rule))
